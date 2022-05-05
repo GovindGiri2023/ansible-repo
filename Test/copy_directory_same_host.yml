@@ -1,0 +1,16 @@
+---
+- hosts: leader
+  become: yes
+  tasks:
+
+  - name: Creating certs directory
+    local_action:
+      module: file
+      path: files/certs
+      state: directory
+
+  - name: Synchronize two directories on one remote host.
+    synchronize:
+      src: /etc/etcd/pki
+      dest: /tmp
+    delegate_to: "{{ inventory_hostname }}"

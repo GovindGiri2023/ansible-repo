@@ -1,0 +1,43 @@
+---
+- hosts: localhost
+  become: yes
+  become_user: root
+
+  tasks:
+  - name: Download tls
+    get_url:
+      url: "https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/{{ item }}"
+
+      dest: /usr/local/bin/
+      mode: 0755
+    with_items:
+     - cfssl
+     - cfssljson
+
+  - name: Execute the script
+    shell: sh CA.sh
+    args:
+       chdir: files/
+
+  - name: Create TLS certificates
+    shell: sh TLS.sh
+    args:
+       chdir: files/
+
+- hosts: etcd-servers
+  become: yes
+  become_user: root
+  vars_files:
+    - vars/var
+  tasks:
+       - include: tasks/etcd_binaries.yml
+       - include: tasks/ca_cert.yml
+       - include: tasks/systemd.yml
+
+- hosts: masters
+  become: yes
+  become_user: root
+  tasks:
+       - include: tasks/ca_cert.yml
+      
+

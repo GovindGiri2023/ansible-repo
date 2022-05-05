@@ -1,0 +1,8 @@
+---
+- hosts: all
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - include: tasks/aws_cli.yml
+    - include: tasks/master_node.yml
+    - include: tasks/worker_node.yml

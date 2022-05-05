@@ -1,0 +1,54 @@
+- name: Creating a repository file for Kubernetes
+     file:
+        path: /etc/yum.repos.d/kubernetes.repo
+        state: touch
+
+   - name: Adding repository details in Kubernetes repo file.
+     blockinfile:
+        path: /etc/yum.repos.d/kubernetes.repo
+        block: |
+          [kubernetes]
+          name=Kubernetes
+          baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+          enabled=1
+          gpgcheck=1
+          repo_gpgcheck=1
+          gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+            https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+   - name: Remove previous kubeadm, kubectl and kubelet packages to keep the version in sync with Master Package versions
+     yum: name="{{item}}" state=absent autoremove=true
+     with_items:
+        - kubeadm
+        - kubelet
+        - kubectl
+        - kubernetes-cni
+
+   - name: Installing Kubernetes Cluster Packages matching with Master package versions.
+     yum: name="{{item}}" state=present
+     with_items:
+        - kubeadm-1.23.1-0 #update the version matching with Master/ControlPlane package version
+        - kubectl-1.23.1-0 #update the version matching with Master/ControlPlane package version
+        - kubelet-1.23.1-0 #update the version matching with Master/ControlPlane package version
+
+   - name: Enable service kubelet, and enable persistently
+     service: 
+       name: kubelet
+       enabled: yes
+  
+   - name: Creates directory to avoid cni issues
+     file:
+        path: /run/systemd/resolve
+        state: directory
+    
+   - name: copy file to avoid node not-ready status
+     copy:
+        src: /etc/resolv.conf
+        dest: /run/systemd/resolve/resolv.conf 
+        remote_src: yes
+
+   - name: restart network service
+     systemd:
+        state: restarted
+        daemon_reload: yes
+        name: network

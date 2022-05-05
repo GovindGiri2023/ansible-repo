@@ -1,0 +1,39 @@
+cfssl gencert \
+-ca=ca.pem \
+-ca-key=ca-key.pem \
+-config=ca-config.json \
+-hostname=172.31.95.26,172.31.62.109,172.31.84.243,172.31.87.150,127.0.0.1,kubernetes.default \
+-profile=kubernetes kubernetes-csr.json | \
+cfssljson -bare kubernetes
+
+[unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+
+[Service]
+ExecStart=/usr/local/bin/etcd \
+  --name 172.31.62.109 \
+  --cert-file=/etc/etcd/kubernetes.pem \
+  --key-file=/etc/etcd/kubernetes-key.pem \
+  --peer-cert-file=/etc/etcd/kubernetes.pem \
+  --peer-key-file=/etc/etcd/kubernetes-key.pem \
+  --trusted-ca-file=/etc/etcd/ca.pem \
+  --peer-trusted-ca-file=/etc/etcd/ca.pem \
+  --peer-client-cert-auth \
+  --client-cert-auth \
+  --initial-advertise-peer-urls https://172.31.62.109:2380 \
+  --listen-peer-urls https://172.31.62.109:2380 \
+  --listen-client-urls https://172.31.62.109:2379,http://127.0.0.1:2379 \
+  --advertise-client-urls https://172.31.62.109:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster 172.31.62.109=https://172.31.62.109:2380,172.31.95.26=https://172.31.95.26:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+
+
+[Install]
+WantedBy=multi-user.target

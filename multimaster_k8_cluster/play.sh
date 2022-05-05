@@ -1,0 +1,1 @@
+nsible-playbook playbook.yml --inventory=inventory.yml

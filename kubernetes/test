@@ -1,0 +1,98 @@
+---
+- name: aws_cli configuration
+  hosts: localhost
+  become: yes
+  remote_user: root
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - name: Install Python PIP
+    yum: pkg=centos-release-scl state=latest
+
+  - name: Install boto via PIP
+    yum: name=rh-python36 state=latest
+
+  - name: Install epel-release
+    yum : name=epel-release state=latest
+
+  - name: Install pip
+    yum : name=python-pip state=latest
+
+  - name: enable python3
+    shell: scl enable rh-python36 bash
+
+  - name: install unzip
+    yum:
+       name: unzip
+       state: latest
+
+  - name: Install AWS CLI
+    get_url:
+       url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+       dest: /opt/awscli-bundle.zip
+       mode: 0755
+#    shell: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscli-bundle.zip"
+
+  - name: unzip aws cli
+    unarchive:
+      src: /opt/awscli-bundle.zip
+      dest: /opt
+#    shell: unzip awscli-bundle.zip
+
+  - name: install aws cli
+    shell: ./aws/install -i /usr/local/aws --update
+
+
+  - name: Configure AWS.
+    shell: aws configure set {{ item.key }} {{ item.value }} --profile {{ aws_profile }}
+    no_log: False
+    with_dict:
+      aws_access_key_id: "{{ aws_access_key }}"
+      aws_secret_access_key: "{{ aws_secret_key }}"
+      region: "{{ aws_region }}"
+      format: "{{ aws_format }}"
+    become_user: "{{ aws_system_user }}"
+    changed_when: falsecat > ca-config.json <<EOF
+{
+ "signing": {
+        "default": {
+            "expiry": "8760h"
+        },
+        "profiles": {
+            "etcd": {
+                "expiry": "8760h",
+                "usages": ["signing","key encipherment","server auth","client auth"]
+            }
+        }
+    }
+}
+EOF
+cat > ca-csr.json <<EOF
+{
+  "CN": "etcd cluster",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "BrovVox",
+      "L": "USA",
+      "O": "k8Production",
+      "OU": "ETCD-CA",
+      "ST": "Norway"
+    }
+  ]
+}
+EOF
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+}
+
+
+
+
+
+
+
+
+

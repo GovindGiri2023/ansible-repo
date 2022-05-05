@@ -1,0 +1,59 @@
+
+  - name: create a directory for ETCD service
+    file:
+      path: /etc/systemd/system/etcd.service
+      state: touch
+
+  - name: Ansible create file with content example
+    copy:
+        dest: /etc/systemd/system/etcd.service
+        content: |
+          [Unit]
+          Description=etcd
+          Documentation=https://github.com/coreos
+          [Service]
+          Type=notify
+          ExecStart=/usr/local/bin/etcd \
+            --name {{ansible_hostname}} \
+            --cert-file=/etc/etcd/pki/etcd.pem \
+            --key-file=/etc/etcd/pki/etcd-key.pem \
+            --peer-cert-file=/etc/etcd/pki/etcd.pem \
+            --peer-key-file=/etc/etcd/pki/etcd-key.pem \
+            --trusted-ca-file=/etc/etcd/pki/ca.pem \
+            --peer-trusted-ca-file=/etc/etcd/pki/ca.pem \
+            --peer-client-cert-auth \
+            --client-cert-auth \
+            --initial-advertise-peer-urls https://{{ ansible_host }}:2380 \
+            --listen-peer-urls https://{{ ansible_host }}:2380 \
+            --listen-client-urls https://{{ ansible_host }}:2379,https://127.0.0.1:2379 \
+            --advertise-client-urls https://{{ ansible_host }}:2379 \
+            --initial-cluster-token etcd-cluster-1 \
+            --initial-cluster {% for host in groups['etcd-servers'] %}{{ hostvars[host]['ansible_hostname'] }}=https://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:2380,{% endfor %} \
+            --initial-cluster-state new \
+            --data-dir=/var/lib/etcd
+          Restart=on-failure
+          RestartSec=5
+          [Install]
+          WantedBy=multi-user.target
+
+  - name: systemctl daemon-reload
+    become: yes
+    become_user: root
+    systemd:
+      daemon_reload: yes
+
+  - name: launching etcd...
+    become: yes
+    become_user: root
+    service:
+      name: etcd
+      enabled: yes
+      state: started
+
+  - name: Verify Etcd cluster status
+    command: ETCDCTL_API=3 etcdctl \
+               --endpoints=https://127.0.0.1:2379 \
+               --cacert=/etc/etcd/pki/ca.pem \
+               --cert=/etc/etcd/pki/kubernetes.pem \
+               --key=/etc/etcd/pki/kubernetes-key.pem \
+               member list

@@ -1,0 +1,10 @@
+---
+- hosts: etcd-servers
+  become: yes
+  become_user: root
+  vars_files:
+    - vars/var
+  tasks:
+    - include: tasks/etcd_binaries.yml
+    - include: tasks/ca_cert.yml
+    - include: tasks/systemd.yml

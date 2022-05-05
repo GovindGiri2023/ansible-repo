@@ -1,0 +1,14 @@
+---
+- hosts: master-servers
+  become: yes
+  become_user: root
+
+  tasks:
+  - name: Create variable from command
+    command: curl http://169.254.169.254/latest/meta-data/local-hostname
+    register: command_output
+  - debug: msg="{{command_output.stdout}}"
+
+  - name: Changin hostname
+    command: hostnamectl set-hostname "{{command_output.stdout}}"
+

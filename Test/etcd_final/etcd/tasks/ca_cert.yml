@@ -1,0 +1,55 @@
+  - name: Download tls
+    get_url:
+      url: "https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/{{ item }}"
+      dest: /tmp
+      mode: 0755
+    with_items:
+     - cfssl
+     - cfssljson
+
+  - name: Copy the scripts to tmp location
+    copy:
+        src: "{{item}}"
+        dest:  /tmp
+        owner: root
+        group: root
+        mode: 0755
+    with_items:
+      - ca_cert.sh
+      - tls_all_etcd.sh
+
+  - name: Create a Certificate Authority (CA)
+    shell: sh /tmp/ca_cert.sh
+
+  - name: Create TLS certificate for all ETCD
+    shell: sh /tmp/tls_all_etcd.sh
+
+  - name: Creates directory
+    file:
+        path: /etc/etcd/pki
+        state: directory
+        
+  - name: Copy the certificates to a standard location
+    copy:
+        src: /home/ubuntu/{{item}}
+        remote_src: yes
+        dest:  /etc/etcd/pki/
+        owner: root
+        group: root
+        mode: 0755
+    with_items:
+       - ca.pem
+       - etcd.pem
+       - etcd-key.pem
+
+  
+
+
+    
+
+  
+
+
+  
+
+  

@@ -1,0 +1,21 @@
+  - name: create /var/lib/etcd and /etc/etcd directories
+    file: dest={{ item }} state=directory recurse=yes
+    with_items:
+    - /etc/etcd/pki/
+    - /var/lib/etcd
+
+  - name: Copy the certificates to a standard location
+    copy:
+        src: "{{item}}"
+        dest:  /etc/etcd/pki/
+    with_items:
+       - ca.pem
+       - etcd.pem
+       - etcd-key.pem
+
+  
+
+
+  
+
+  

@@ -1,0 +1,17 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no
+  tasks:
+  - name: disable jobs
+    jenkins_job:
+       name: "{{ item }}"
+       password: admin@123
+       enabled: true
+       url: http://localhost:8080
+       user: admin
+    with_items:
+          - android_app_test1
+          - android_test_freestyle
+          - android_test_project
+          - docker

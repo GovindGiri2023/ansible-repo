@@ -1,0 +1,12 @@
+[etcd-servers]
+44.198.187.4
+35.171.225.50
+44.200.231.125
+
+[masters]
+Ip_
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/home/govind/etcd.pem

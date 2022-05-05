@@ -1,0 +1,50 @@
+- name: Exchange Keys between servers
+  hosts: testALL
+  become_user: ubuntu
+  tasks:
+    - name: SSH KeyGen command
+      tags: run
+      shell: >
+        ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa
+        creates="~/.ssh/id_rsa"
+
+    - name: Fetch the keyfile from the node to master
+      tags: run
+      fetch:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "buffer/{{ inventory_hostname }}-id_rsa.pub"
+        flat: yes
+
+    - name: Copy the key add to authorized_keys using Ansible module
+      tags: runcd
+      authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ lookup('file','buffer/{{item}}-id_rsa.pub')}}"
+      when: "{{ item != ansible_hostname }}"
+      with_items:
+        - "{{ groups['testALL'] }}"
+
+
+- name: Sync Pull task - Executed on  the Destination host
+  hosts: testBC # Destination host
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  tasks:
+
+  - name: Copy the file from mwiapp01 to mwiapp02 using Method Pul
+    tags: sync-pull
+    synchronize:
+        src: "/etc/etcd/pki/{{ item }}"
+        dest: "/root/"
+        mode: push
+        private_key: /home/ubuntu/.ssh/id_rsa
+    delegate_to: "{{groups['testALL'][0]}}"  # source host
+    register: syncfile
+    run_once: false
+    with_items:
+         - example1
+
+
+

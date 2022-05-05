@@ -1,0 +1,44 @@
+---
+- name: Generate Hosts File
+  hosts: leader
+  become: true
+  gather_facts: true
+  vars:
+    nodeip: var=ansible_eth1.ipv4.address
+  tasks:
+    - name: Initializing Kubernetes cluster
+      shell: kubeadm init --control-plane-endpoint "172.31.38.156:80" --upload-certs --apiserver-advertise-address 172.31.17.106 --pod-network-cidr 172.32.0.0/16 --service-cidr 172.34.0.0/24
+
+    - name: Copying required files
+      shell: |
+        mkdir -p $HOME/.kube
+        sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+    - name: Install calico pod network
+      command: kubectl create -f https://docs.projectcalico.org/archive/v3.21/manifests/calico.yaml
+
+    - name: Creating certs directory
+      local_action:
+        module: file
+        path: files/certs
+        state: directory
+
+    - name: Coping master certificate to certs Directory.
+      fetch:
+          src: /etc/kubernetes/pki/{{ item }}
+          dest: files/certs/
+          flat: yes
+      loop:
+         - ca.crt
+         - ca.key
+         - front-proxy-ca.crt
+         - front-proxy-ca.key
+         - front-proxy-client.crt
+         - front-proxy-client.key
+         - sa.key
+         - sa.crt
+
+
+
+

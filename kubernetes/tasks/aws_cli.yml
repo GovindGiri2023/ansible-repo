@@ -1,0 +1,27 @@
+---
+- name: aws_cli configuration
+  hosts: localhost
+  remote_user: root
+  tasks:
+  - name: Install Python PIP
+    yum: pkg=centos-release-scl state=latest
+
+  - name: Install boto via PIP
+    pip: name=rh-python36 state=latest
+ 
+  - name: Install boto3 via PIP    
+    pip: name=boto3 state=latest
+    
+  - name: Install AWS CLI
+    pip: name=awscli state=latest
+
+  - name: Configure AWS.
+    shell: aws configure set {{ item.key }} {{ item.value }} --profile {{ aws_profile }}
+    no_log: True
+    with_dict:
+      aws_access_key_id: "{{ aws_access_key }}"
+      aws_secret_access_key: "{{ aws_secret_key }}"
+      region: "{{ aws_region }}"
+      format: "{{ aws_format }}"
+    become_user: "{{ aws_system_user }}"
+    changed_when: false

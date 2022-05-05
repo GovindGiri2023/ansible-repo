@@ -1,0 +1,6 @@
+---
+http_host: "localhost"
+http_conf: "my_domain.conf"
+app_user: "root"
+http_port: "80"
+# defaults file for ApacheWebServer

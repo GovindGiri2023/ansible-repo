@@ -1,0 +1,24 @@
+---
+- hosts: masters
+  become: yes
+  become_user: root
+  tasks:
+
+  - name: create /etc/kubernetes/pki directory.
+    file: dest={{ item }} state=directory recurse=yes
+    with_items:
+    - /etc/Kubernetes/pki/
+
+  - name: Copy the certificates to a standard location
+    copy:
+        src: "files/certs/{{item}}"
+        dest: /etc/kubernetes/pki/
+    with_items:
+      - ca.crt
+      - ca.key
+      - front-proxy-ca.crt
+      - front-proxy-ca.key
+      - front-proxy-client.crt
+      - front-proxy-client.key
+      - sa.key
+      - sa.crt

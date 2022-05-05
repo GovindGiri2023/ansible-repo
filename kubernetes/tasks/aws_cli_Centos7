@@ -1,0 +1,53 @@
+---
+- name: aws_cli configuration
+  hosts: localhost
+  become: yes
+  remote_user: root
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - name: Install scl package for enable python3
+    yum: pkg=centos-release-scl state=latest
+
+  - name: Install python3
+    yum: name=rh-python36 state=latest
+
+  - name: Install epel-release repo for PIP
+    yum : name=epel-release state=latest
+
+  - name: Install pip
+    yum : name=python-pip state=latest
+
+  - name: enable python3
+    shell: scl enable rh-python36 bash
+
+  - name: install unzip
+    yum:
+       name: unzip
+       state: latest
+
+  - name: Donload AWS cli bundle.
+    get_url:
+       url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+       dest: /opt/awscli-bundle.zip
+       mode: 0755
+
+  - name: unzip aws cli
+    unarchive:
+      src: /opt/awscli-bundle.zip
+      dest: /opt/
+
+  - name: install aws cli
+    shell: ./aws/install -i /usr/local/aws --update
+
+
+  - name: Configure AWS.
+    shell: aws configure set {{ item.key }} {{ item.value }} --profile {{ aws_profile }}
+    no_log: False
+    with_dict:
+      aws_access_key_id: "{{ aws_access_key }}"
+      aws_secret_access_key: "{{ aws_secret_key }}"
+      region: "{{ aws_region }}"
+      format: "{{ aws_format }}"
+    become_user: "{{ aws_system_user }}"
+    changed_when: false

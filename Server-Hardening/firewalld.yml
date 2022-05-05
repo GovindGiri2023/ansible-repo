@@ -1,0 +1,11 @@
+- name: Configure open ports with firewalld.
+  firewalld:
+    state: "{{ item.state }}"
+    port: "{{ item.port }}"
+    zone: external
+    immediate: yes
+    permanent: yes
+  with_items:
+  - { state: 'enabled', port: '22/tcp' }
+  - { state: 'enabled', port: '80/tcp' }
+  - { state: 'enabled', port: '123/udp' }

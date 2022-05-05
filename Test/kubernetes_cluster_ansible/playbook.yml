@@ -1,0 +1,11 @@
+---
+- hosts: masters
+  become: yes
+  become_user: root
+
+  tasks:
+    - include: tasks/master&workers.yml
+    - include: tasks/masters.yml
+    - include: tasks/workers.yml
+    
+    

@@ -1,0 +1,36 @@
+---
+- name: Generate Hosts File
+  hosts: haproxy
+  become_user: root
+  gather_facts: true
+  vars:
+    my_file: /etc/haproxy/haproxy.cfg
+    my_template: files/haproxy.j2
+  tasks:
+       - include: tasks/haproxy_installation.yml
+       
+- hosts: masters
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  tasks:
+      - include: tasks/kubernetes_prerequisites.yml
+
+- name: Generate Hosts File
+  hosts: leader
+  become: true
+  gather_facts: true
+  vars:
+    nodeip: var=ansible_eth1.ipv4.address
+  tasks:
+       
+       - include: tasks/leader_master.yml
+---
+- name: Generate Hosts File
+  hosts: member
+  become: true
+  gather_facts: true
+  tasks:
+       - include: taks/master_member.yml

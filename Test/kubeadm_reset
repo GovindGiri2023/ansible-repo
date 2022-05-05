@@ -1,0 +1,1 @@
+ansible testALL -i inventory.ini -m shell -a "sudo kubeadm reset -y"

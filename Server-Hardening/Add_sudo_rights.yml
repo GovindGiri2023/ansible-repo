@@ -1,0 +1,6 @@
+- name: Add sudo rights for deployment user.
+  lineinfile:
+  dest: /etc/sudoers
+  regexp: '^johndoe'
+  line: 'johndoe ALL=(ALL) NOPASSWD: ALL'
+  state: present

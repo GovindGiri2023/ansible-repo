@@ -1,0 +1,6 @@
+- name: Remove unused packages.
+  apt: name={{ item }} state=absent purge=yes
+  with_items:
+  - apache2
+  - nano
+  - mailutils
